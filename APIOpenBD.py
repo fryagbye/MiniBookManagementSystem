@@ -1,9 +1,9 @@
 import json
 import requests
 
-class APIGoogleBooks:
+class APIOpenBD:
     '''
-    Google Books API
+    Openbd API
     '''
     def __init__(self):
         '''
@@ -13,7 +13,7 @@ class APIGoogleBooks:
 
     def get_json(self, isbn:str) -> dict:
         '''
-        Google Books API の呼び出しで戻ってきた書籍データから、必要な情報を抜き出して整形する
+        Openbd API の呼び出しで戻ってきた書籍データから、必要な情報を抜き出して整形する
 
         Parameters
         ----------
@@ -34,31 +34,25 @@ class APIGoogleBooks:
             return None
         
         # 検索結果が0だった場合
-        if json_api_data['totalItems'] == 0:
+        if json_api_data[0] == None:
             return None
         # 呼び出しが成功した場合
         # 必要な情報だけを抜き出して新しいJSONを作成する
         # Elasticsearchの項目（'mapping.json'で定義）と項目を揃えること
         json_data = {}
-        json_data['title'] = json_api_data['items'][0]['volumeInfo']['title']
-        json_data['authors'] = json_api_data['items'][0]['volumeInfo']['authors']
-        json_data['publisher'] = json_api_data['items'][0]['volumeInfo']['publisher']
-        json_data['publishedDate'] = json_api_data['items'][0]['volumeInfo']['publishedDate']
-        json_data['description'] = json_api_data['items'][0]['volumeInfo']['description']
-        json_data['thumbnail'] = json_api_data['items'][0]['volumeInfo']['imageLinks']['thumbnail']
-
-        # isbnコードが込み入った形で格納されている
-        industryIdentifiers = json_api_data['items'][0]['volumeInfo']['industryIdentifiers']
-        for item in industryIdentifiers:
-            if item['type'] == 'ISBN_13':
-                json_data['isbn'] = item['identifier']
-                break
+        json_data['isbn'] = json_api_data[0]['summary']['isbn']
+        json_data['title'] = json_api_data[0]['summary']['title']
+        json_data['authors'] = json_api_data[0]['summary']['author']
+        json_data['publishedDate'] = json_api_data[0]['summary']['pubdate']
+        json_data['publisher'] = json_api_data[0]['summary']['publisher']
+        json_data['thumbnail'] = json_api_data[0]['summary']['cover']
+        json_data['description'] = json_api_data[0]['onix']['CollateralDetail']['TextContent'][0]['Text']
 
         return json_data
         
     def __call_web_api(self, isbn:str) -> dict:
         '''
-        Google Books API を呼び出して、ISBNに対応するJSONデータを受け取る
+        Openbd API を呼び出して、ISBNに対応するJSONデータを受け取る
 
         Parameters
         ----------
@@ -71,7 +65,7 @@ class APIGoogleBooks:
             呼び出しに失敗した場合はNone
         '''
         # WebAPIのURLに引数文字列を追加
-        url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn
+        url = 'https://api.openbd.jp/v1/get?isbn=' + isbn
 
         # WebAPIの呼び出し
         response = requests.get(url)
@@ -92,6 +86,6 @@ class APIGoogleBooks:
         return json_data
 
 if __name__ == "__main__":
-    api = APIGoogleBooks()
+    api = APIOpenBD()
     data = api.get_json('9784797389463')
     print(data)

@@ -7,11 +7,11 @@
         setting.json, mapping.json を読み込んでINDEXを設定
 ''' 
 from ElasticsearchWrapper import ElasticsearchWrapper
-import json
+import json 
 
 if __name__ == '__main__':
     # 
-    es = ElasticsearchWrapper("googlebooks", "googlebooks-index")
+    es = ElasticsearchWrapper("openbd", "openbd-index")
 
     # すでに存在するインデックスを削除する
     # 存在しないインデックスに対して呼び出すとExceptionなのでpassさせておく
